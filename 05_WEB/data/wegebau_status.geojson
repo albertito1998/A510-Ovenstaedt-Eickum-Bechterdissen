@@ -1,0 +1,152 @@
+{
+  "type": "FeatureCollection",
+  "name": "wegebau_status",
+  "crs_note": "GeoJSON exported for web use in EPSG:4326. Working GIS/CAD CRS remains EPSG:25832.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "uid": "A510_M001_001",
+        "project": "A510 Ovenstaedt-Eickum-Bechterdissen",
+        "section": "Ovenstaedt-Eickum",
+        "mast": "M001",
+        "parcel_id": "TEST-001",
+        "type": "WEG",
+        "status": "PENDING",
+        "owner_ref": "OWNER-001",
+        "permit_ref": "",
+        "date_req": "2026-05-11",
+        "date_ok": "",
+        "comment": "Polygono ficticio de acceso temporal para pruebas internas."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.6312, 52.0914],
+            [8.6356, 52.0914],
+            [8.6356, 52.0941],
+            [8.6312, 52.0941],
+            [8.6312, 52.0914]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "uid": "A510_M002_001",
+        "project": "A510 Ovenstaedt-Eickum-Bechterdissen",
+        "section": "Eickum-Bechterdissen",
+        "mast": "M002",
+        "parcel_id": "TEST-002",
+        "type": "ARBEITSFLAECHE",
+        "status": "APPROVED",
+        "owner_ref": "OWNER-002",
+        "permit_ref": "https://drive.google.com/",
+        "date_req": "2026-05-08",
+        "date_ok": "2026-05-10",
+        "comment": "Area de trabajo ficticia con permiso ya concedido."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.6668, 52.0644],
+            [8.6713, 52.0644],
+            [8.6713, 52.0673],
+            [8.6668, 52.0673],
+            [8.6668, 52.0644]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "uid": "A510_M003_001",
+        "project": "A510 Ovenstaedt-Eickum-Bechterdissen",
+        "section": "Ovenstaedt-Eickum",
+        "mast": "M003",
+        "parcel_id": "TEST-003",
+        "type": "PARZELLE",
+        "status": "REJECTED",
+        "owner_ref": "OWNER-003",
+        "permit_ref": "",
+        "date_req": "2026-05-06",
+        "date_ok": "",
+        "comment": "Parcela ficticia rechazada por incompatibilidad de acceso."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.7251, 52.0455],
+            [8.7297, 52.0455],
+            [8.7297, 52.0482],
+            [8.7251, 52.0482],
+            [8.7251, 52.0455]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "uid": "A510_M004_001",
+        "project": "A510 Ovenstaedt-Eickum-Bechterdissen",
+        "section": "Bechterdissen",
+        "mast": "M004",
+        "parcel_id": "TEST-004",
+        "type": "LAGER",
+        "status": "CONDITIONAL",
+        "owner_ref": "OWNER-004",
+        "permit_ref": "https://example.com/permits/A510_M004_001",
+        "date_req": "2026-05-03",
+        "date_ok": "2026-05-09",
+        "comment": "Zona de acopio ficticia condicionada a horario de acceso."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.5937, 52.0352],
+            [8.5985, 52.0352],
+            [8.5985, 52.0382],
+            [8.5937, 52.0382],
+            [8.5937, 52.0352]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "uid": "A510_M005_001",
+        "project": "A510 Ovenstaedt-Eickum-Bechterdissen",
+        "section": "Herford Nord",
+        "mast": "M005",
+        "parcel_id": "TEST-005",
+        "type": "TROMMELPLATZ",
+        "status": "UNKNOWN",
+        "owner_ref": "OWNER-005",
+        "permit_ref": "",
+        "date_req": "2026-05-11",
+        "date_ok": "",
+        "comment": "Emplazamiento ficticio pendiente de clasificacion documental."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.6875, 52.1266],
+            [8.6922, 52.1266],
+            [8.6922, 52.1292],
+            [8.6875, 52.1292],
+            [8.6875, 52.1266]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A510 WebGIS | Wegebau y Permisos</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  >
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar__header">
+        <p class="eyebrow">Proyecto WebGIS</p>
+        <h1>A510 Ovenstaedt-Eickum-Bechterdissen</h1>
+        <p class="subtitle">Wegebau, permisos de parcelas y accesos temporales</p>
+      </div>
+
+      <section class="panel-block">
+        <h2>Filtros</h2>
+        <label class="field">
+          <span>Status</span>
+          <select id="statusFilter">
+            <option value="ALL">Todos</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Section</span>
+          <select id="sectionFilter">
+            <option value="ALL">Todos</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Mast</span>
+          <select id="mastFilter">
+            <option value="ALL">Todos</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Búsqueda libre</span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="uid, parcel_id o comment"
+            autocomplete="off"
+          >
+        </label>
+
+        <div class="button-row">
+          <button id="resetFiltersBtn" type="button">Reset filtros</button>
+          <button id="zoomAllBtn" type="button">Zoom a todos</button>
+        </div>
+      </section>
+
+      <section class="panel-block">
+        <h2>Contador dinámico</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Visibles</span>
+            <strong id="countTotal">0</strong>
+          </div>
+          <div class="stat-card approved">
+            <span class="stat-label">Approved</span>
+            <strong id="countApproved">0</strong>
+          </div>
+          <div class="stat-card pending">
+            <span class="stat-label">Pending</span>
+            <strong id="countPending">0</strong>
+          </div>
+          <div class="stat-card rejected">
+            <span class="stat-label">Rejected</span>
+            <strong id="countRejected">0</strong>
+          </div>
+          <div class="stat-card conditional">
+            <span class="stat-label">Conditional</span>
+            <strong id="countConditional">0</strong>
+          </div>
+          <div class="stat-card unknown">
+            <span class="stat-label">Unknown</span>
+            <strong id="countUnknown">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-block">
+        <h2>Leyenda</h2>
+        <ul class="legend-list">
+          <li><span class="legend-swatch approved"></span>Aprobado</li>
+          <li><span class="legend-swatch pending"></span>Pendiente</li>
+          <li><span class="legend-swatch rejected"></span>Rechazado</li>
+          <li><span class="legend-swatch conditional"></span>Condicionado</li>
+          <li><span class="legend-swatch unknown"></span>Desconocido</li>
+        </ul>
+      </section>
+
+      <section class="panel-block panel-block--small">
+        <h2>Capas</h2>
+        <p>Bases disponibles: OpenStreetMap y Esri Satélite. WMS catastral preparado por variables en <code>app.js</code>.</p>
+        <p class="crs-note">CAD/QGIS: EPSG:25832. Web GeoJSON: EPSG:4326.</p>
+      </section>
+    </aside>
+
+    <main class="map-wrapper">
+      <div id="map" aria-label="Mapa WebGIS"></div>
+      <div id="mapMessage" class="map-message" hidden>Cargando datos GIS...</div>
+    </main>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="app.js"></script>
+</body>
+</html>
