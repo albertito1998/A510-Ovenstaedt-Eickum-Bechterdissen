@@ -97,11 +97,11 @@ Cada feature debe incluir:
 
 ## 10. Como publicar en GitHub Pages
 1. Subir el proyecto a un repositorio GitHub.
-2. Mantener `05_WEB` como carpeta de publicacion o copiar su contenido a la raiz del branch de Pages.
+2. Este repositorio incluye el workflow `.github/workflows/deploy-pages.yml` para publicar automaticamente la carpeta `05_WEB`.
 3. En GitHub: `Settings -> Pages`.
-4. Seleccionar el branch y carpeta de despliegue.
-5. Guardar cambios y esperar la URL de publicacion.
-6. Confirmar que la ruta relativa `./data/wegebau_status.geojson` sigue siendo valida tras publicar.
+4. En `Source`, seleccionar `GitHub Actions`.
+5. Hacer push a `main` o lanzar manualmente el workflow `Deploy GitHub Pages`.
+6. Esperar la URL de publicacion y confirmar que la ruta relativa `./data/wegebau_status.geojson` sigue siendo valida tras publicar.
 
 ## 11. Checklist QA/QC semanal
 - Todos los poligonos tienen `uid`.
