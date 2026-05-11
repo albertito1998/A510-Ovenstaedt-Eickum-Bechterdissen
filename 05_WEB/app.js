@@ -96,6 +96,8 @@ const searchInput = document.getElementById("searchInput");
 const resetFiltersBtn = document.getElementById("resetFiltersBtn");
 const zoomAllBtn = document.getElementById("zoomAllBtn");
 const zoomProjectBtn = document.getElementById("zoomProjectBtn");
+const sidebar = document.getElementById("sidebar");
+const mobilePanelToggle = document.getElementById("mobilePanelToggle");
 
 const counters = {
   total: document.getElementById("countTotal"),
@@ -163,6 +165,15 @@ let permitStatusByParcel = {};
 function showMessage(message, isVisible = true) {
   mapMessage.textContent = message;
   mapMessage.hidden = !isVisible;
+}
+
+function setMobilePanelOpen(isOpen) {
+  if (!mobilePanelToggle || !sidebar) {
+    return;
+  }
+  sidebar.classList.toggle("is-open", isOpen);
+  mobilePanelToggle.setAttribute("aria-expanded", String(isOpen));
+  mobilePanelToggle.textContent = isOpen ? "Cerrar panel" : "Panel GIS";
 }
 
 function disableUnusedFilters() {
@@ -431,5 +442,16 @@ map.on("overlayadd", async (event) => {
     showMessage("Error al cargar capas DXF pesadas.", true);
   }
 });
+
+if (mobilePanelToggle) {
+  mobilePanelToggle.addEventListener("click", () => {
+    setMobilePanelOpen(!sidebar.classList.contains("is-open"));
+  });
+}
+
+if (IS_MOBILE) {
+  setMobilePanelOpen(false);
+  map.on("click", () => setMobilePanelOpen(false));
+}
 
 initializeMap();

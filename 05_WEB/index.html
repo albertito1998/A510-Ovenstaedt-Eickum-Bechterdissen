@@ -15,7 +15,7 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar__header">
         <p class="eyebrow">ELECNORGIS</p>
         <h1>A510 Ovenstaedt-Eickum-Bechterdissen</h1>
@@ -115,6 +115,9 @@
     </aside>
 
     <main class="map-wrapper">
+      <button id="mobilePanelToggle" class="mobile-panel-toggle" type="button" aria-expanded="false" aria-controls="sidebar">
+        Panel GIS
+      </button>
       <div id="map" aria-label="Mapa WebGIS"></div>
       <div id="mapMessage" class="map-message" hidden>Cargando datos GIS...</div>
     </main>
