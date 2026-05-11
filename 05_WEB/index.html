@@ -19,11 +19,11 @@
       <div class="sidebar__header">
         <p class="eyebrow">ELECNORGIS</p>
         <h1>A510 Ovenstaedt-Eickum-Bechterdissen</h1>
-        <p class="subtitle">Wegebau, permisos de parcelas y accesos temporales</p>
+        <p class="subtitle">Control de permisos sobre catastro, corredor de linea y capas ambientales WMS</p>
       </div>
 
       <section class="panel-block">
-        <h2>Filtros</h2>
+        <h2>Acciones</h2>
         <label class="field">
           <span>Status</span>
           <select id="statusFilter">
@@ -46,7 +46,7 @@
         </label>
 
         <label class="field">
-          <span>Búsqueda libre</span>
+          <span>Busqueda libre</span>
           <input
             id="searchInput"
             type="search"
@@ -65,51 +65,51 @@
       </section>
 
       <section class="panel-block">
-        <h2>Contador dinámico</h2>
+        <h2>Control permisos CSV</h2>
         <div class="stats-grid">
           <div class="stat-card">
-            <span class="stat-label">Visibles</span>
+            <span class="stat-label">Parcelas</span>
             <strong id="countTotal">0</strong>
           </div>
           <div class="stat-card approved">
-            <span class="stat-label">Approved</span>
+            <span class="stat-label">Verde</span>
             <strong id="countApproved">0</strong>
           </div>
           <div class="stat-card pending">
-            <span class="stat-label">Pending</span>
+            <span class="stat-label">Amarillo</span>
             <strong id="countPending">0</strong>
           </div>
           <div class="stat-card rejected">
-            <span class="stat-label">Rejected</span>
+            <span class="stat-label">Rojo</span>
             <strong id="countRejected">0</strong>
           </div>
           <div class="stat-card conditional">
-            <span class="stat-label">Conditional</span>
+            <span class="stat-label">CSV</span>
             <strong id="countConditional">0</strong>
           </div>
           <div class="stat-card unknown">
-            <span class="stat-label">Unknown</span>
+            <span class="stat-label">Sin CSV</span>
             <strong id="countUnknown">0</strong>
           </div>
         </div>
+        <p class="panel-note">Fichero de control: <code>05_WEB/data/parcel_permits_status.csv</code>.</p>
       </section>
 
       <section class="panel-block">
-        <h2>Leyenda</h2>
+        <h2>Leyenda permisos</h2>
         <ul class="legend-list">
-          <li><span class="legend-swatch approved"></span>Aprobado</li>
-          <li><span class="legend-swatch pending"></span>Pendiente</li>
-          <li><span class="legend-swatch rejected"></span>Rechazado</li>
-          <li><span class="legend-swatch conditional"></span>Condicionado</li>
-          <li><span class="legend-swatch unknown"></span>Desconocido</li>
+          <li><span class="legend-swatch approved"></span>Verde: conseguido</li>
+          <li><span class="legend-swatch pending"></span>Amarillo: comunicado</li>
+          <li><span class="legend-swatch rejected"></span>Rojo: sin empezar</li>
+          <li><span class="legend-swatch unknown"></span>Gris: sin dato CSV</li>
         </ul>
       </section>
 
       <section class="panel-block panel-block--small">
         <h2>Capas</h2>
-        <p>Bases disponibles: OpenStreetMap y Esri Satélite.</p>
-        <p>WMS configurables en <code>app.js</code>: Catastro y Naturschutz para el corredor de <code>Trassenachse Gesamt</code>.</p>
-        <p>Capas proyecto: eje <code>Trassenachse Gesamt</code>, buffer 500 m, DXF líneas y DXF polígonos exportados desde QGIS a GeoJSON web.</p>
+        <p>Base por defecto: Esri Satelite. Catastro ALKIS visible sobre ortofoto con estilo de superposicion.</p>
+        <p>Capas proyecto: Trassenachse Gesamt, buffer 500 m, DXF lineas, DXF poligonos y parcelas de control vinculadas por CSV.</p>
+        <p>WMS visibles: catastro, rios, inundables, HQ100, Naturschutz, FFH, Vogelschutz, Landschaftsschutz y Biotopkataster.</p>
         <p class="crs-note">CAD/QGIS: EPSG:25832. Web GeoJSON: EPSG:4326.</p>
       </section>
     </aside>

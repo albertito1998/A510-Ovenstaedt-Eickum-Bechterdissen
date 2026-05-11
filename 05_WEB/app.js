@@ -1,22 +1,92 @@
-const CATASTRO_WMS_URL = "";
-const CATASTRO_WMS_LAYER_NAME = "";
-const NATURSCHUTZ_WMS_URL = "";
-const NATURSCHUTZ_WMS_LAYER_NAMES = "";
-
-const STATUS_COLORS = {
-  APPROVED: "#2ecc71",
-  PENDING: "#f1c40f",
-  REJECTED: "#e74c3c",
-  CONDITIONAL: "#e67e22",
-  UNKNOWN: "#95a5a6"
-};
-
-const VALID_STATUSES = ["APPROVED", "PENDING", "REJECTED", "CONDITIONAL", "UNKNOWN"];
-const GEOJSON_PATH = "./data/wegebau_status.geojson";
 const PROJECT_DXF_LINES_PATH = "./data/project_dxf_lineas.geojson";
 const PROJECT_DXF_POLYGONS_PATH = "./data/project_dxf_poligonos.geojson";
 const TRASSENACHSE_PATH = "./data/trassenachse_gesamt.geojson";
 const TRASSENACHSE_BUFFER_PATH = "./data/trassenachse_gesamt_buffer_500m.geojson";
+const PARCEL_PERMITS_GEOJSON_PATH = "./data/parcel_permits_example.geojson";
+const PARCEL_PERMITS_CSV_PATH = "./data/parcel_permits_status.csv";
+
+const PERMIT_STATUS_COLORS = {
+  OBTAINED: "#2ecc71",
+  CONTACTED: "#f1c40f",
+  NOT_STARTED: "#e74c3c",
+  NO_DATA: "#95a5a6"
+};
+
+const WMS_CATALOG = [
+  {
+    key: "catastro",
+    label: "Catastro NRW - Flurstuecke",
+    url: "https://www.wms.nrw.de/geobasis/wms_nw_alkis",
+    layers: "adv_alkis_flurstuecke",
+    styles: "Gelb",
+    opacity: 0.88,
+    attribution: "Geobasis NRW ALKIS"
+  },
+  {
+    key: "rios",
+    label: "Rios y cauces NRW",
+    url: "https://www.wms.nrw.de/umwelt/gsk3e",
+    layers: "5,8,9,10",
+    opacity: 0.78,
+    attribution: "GSK3E NRW"
+  },
+  {
+    key: "inundables",
+    label: "Zonas inundables NRW",
+    url: "https://www.wms.nrw.de/umwelt/wasser/uesg",
+    layers: "3,5,6",
+    opacity: 0.5,
+    attribution: "UESG NRW"
+  },
+  {
+    key: "hq100",
+    label: "Hochwasser HQ100",
+    url: "https://www.wms.nrw.de/umwelt/HW_Gefahrenkarte",
+    layers: "Grenze_der_ueberfluteten_Gebiete_mw,Tiefen_Ueberflutungsgebiet_mw",
+    opacity: 0.52,
+    attribution: "HW Gefahrenkarte NRW"
+  },
+  {
+    key: "naturschutz",
+    label: "Naturschutzgebiete",
+    url: "https://www.wms.nrw.de/umwelt/linfos",
+    layers: "Naturschutzgebiete",
+    opacity: 0.62,
+    attribution: "LINFOS NRW"
+  },
+  {
+    key: "ffh",
+    label: "FFH-Gebiete",
+    url: "https://www.wms.nrw.de/umwelt/linfos",
+    layers: "FFH-Gebiete",
+    opacity: 0.58,
+    attribution: "LINFOS NRW"
+  },
+  {
+    key: "vogelschutz",
+    label: "Vogelschutzgebiete",
+    url: "https://www.wms.nrw.de/umwelt/linfos",
+    layers: "Vogelschutzgebiete",
+    opacity: 0.58,
+    attribution: "LINFOS NRW"
+  },
+  {
+    key: "lsg",
+    label: "Landschaftsschutz",
+    url: "https://www.wms.nrw.de/umwelt/linfos",
+    layers: "Landschaftsschutzgebiet",
+    opacity: 0.45,
+    attribution: "LINFOS NRW"
+  },
+  {
+    key: "biotop",
+    label: "Biotopkataster",
+    url: "https://www.wms.nrw.de/umwelt/linfos",
+    layers: "Biotopkataster_Flaeche",
+    opacity: 0.52,
+    attribution: "LINFOS NRW"
+  }
+];
 
 const mapMessage = document.getElementById("mapMessage");
 const statusFilter = document.getElementById("statusFilter");
@@ -29,66 +99,39 @@ const zoomProjectBtn = document.getElementById("zoomProjectBtn");
 
 const counters = {
   total: document.getElementById("countTotal"),
-  APPROVED: document.getElementById("countApproved"),
-  PENDING: document.getElementById("countPending"),
-  REJECTED: document.getElementById("countRejected"),
-  CONDITIONAL: document.getElementById("countConditional"),
-  UNKNOWN: document.getElementById("countUnknown")
+  OBTAINED: document.getElementById("countApproved"),
+  CONTACTED: document.getElementById("countPending"),
+  NOT_STARTED: document.getElementById("countRejected"),
+  csv: document.getElementById("countConditional"),
+  NO_DATA: document.getElementById("countUnknown")
 };
 
-const map = L.map("map", {
-  zoomControl: true
-}).setView([52.05, 8.65], 11);
+const map = L.map("map", { zoomControl: true }).setView([52.05, 8.65], 11);
 
 const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 20,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
+});
 
 const satelliteLayer = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-  {
-    maxZoom: 20,
-    attribution: "Tiles &copy; Esri"
-  }
-);
-
-function createWmsLayer(url, layerNames, attribution, opacity = 0.55) {
-  if (!url || !layerNames) {
-    return null;
-  }
-
-  return L.tileLayer.wms(url, {
-    layers: layerNames,
-    format: "image/png",
-    transparent: true,
-    opacity,
-    attribution
-  });
-}
-
-const cadastralWmsLayer = createWmsLayer(
-  CATASTRO_WMS_URL,
-  CATASTRO_WMS_LAYER_NAME,
-  "WMS Catastro",
-  0.58
-);
-const naturschutzWmsLayer = createWmsLayer(
-  NATURSCHUTZ_WMS_URL,
-  NATURSCHUTZ_WMS_LAYER_NAMES,
-  "WMS Naturschutz",
-  0.62
+  { maxZoom: 20, attribution: "Tiles &copy; Esri" }
 );
 
 const overlayLayers = {};
-if (cadastralWmsLayer) {
-  cadastralWmsLayer.addTo(map);
-  overlayLayers["Catastro corredor 500m"] = cadastralWmsLayer;
-}
-if (naturschutzWmsLayer) {
-  naturschutzWmsLayer.addTo(map);
-  overlayLayers["Naturschutz corredor 500m"] = naturschutzWmsLayer;
-}
+WMS_CATALOG.forEach((entry) => {
+  const layer = L.tileLayer.wms(entry.url, {
+    layers: entry.layers,
+    styles: entry.styles || "",
+    format: "image/png",
+    transparent: true,
+    opacity: entry.opacity,
+    attribution: entry.attribution
+  });
+  entry.layer = layer;
+  layer.addTo(map);
+  overlayLayers[entry.label] = layer;
+});
 
 const overlayControl = L.control.layers(
   {
@@ -99,150 +142,35 @@ const overlayControl = L.control.layers(
   { collapsed: false }
 ).addTo(map);
 
-let sourceFeatures = [];
-let currentLayer = null;
-let currentVisibleFeatures = [];
+satelliteLayer.addTo(map);
+
 let trassenachseLayer = null;
 let trassenachseBufferLayer = null;
 let projectLinesLayer = null;
 let projectPolygonsLayer = null;
+let parcelPermitsLayer = null;
 let projectGroup = null;
+let permitParcelFeatures = [];
+let permitStatusByParcel = {};
 
 function showMessage(message, isVisible = true) {
   mapMessage.textContent = message;
   mapMessage.hidden = !isVisible;
 }
 
-function normalizeStatus(status) {
-  return VALID_STATUSES.includes(status) ? status : "UNKNOWN";
-}
-
-function getFeatureColor(feature) {
-  return STATUS_COLORS[normalizeStatus(feature.properties?.status)];
-}
-
-function createPopupValue(value) {
-  return value === null || value === undefined || value === "" ? "-" : String(value);
-}
-
-function createPermitLink(permitRef) {
-  const value = createPopupValue(permitRef);
-  if (value === "-") {
-    return value;
-  }
-
-  if (/^https?:\/\//i.test(value)) {
-    return `<a href="${value}" target="_blank" rel="noopener noreferrer">Abrir documento de permiso</a>`;
-  }
-
-  return value;
-}
-
-function buildPopupContent(properties) {
-  const popupFields = [
-    ["uid", createPopupValue(properties.uid)],
-    ["project", createPopupValue(properties.project)],
-    ["section", createPopupValue(properties.section)],
-    ["mast", createPopupValue(properties.mast)],
-    ["parcel_id", createPopupValue(properties.parcel_id)],
-    ["type", createPopupValue(properties.type)],
-    ["status", createPopupValue(properties.status)],
-    ["owner_ref", createPopupValue(properties.owner_ref)],
-    ["permit_ref", createPermitLink(properties.permit_ref)],
-    ["date_req", createPopupValue(properties.date_req)],
-    ["date_ok", createPopupValue(properties.date_ok)],
-    ["comment", createPopupValue(properties.comment)]
-  ];
-
-  return `
-    <div class="popup-grid">
-      ${popupFields
-        .map(([label, value]) => `<div><strong>${label}</strong><span>${value}</span></div>`)
-        .join("")}
-    </div>
-  `;
-}
-
-function styleFeature(feature) {
-  return {
-    color: "#4c5d68",
-    weight: 1.4,
-    fillColor: getFeatureColor(feature),
-    fillOpacity: 0.65
-  };
-}
-
-function onEachFeature(feature, layer) {
-  layer.bindPopup(buildPopupContent(feature.properties || {}));
-}
-
-function extractUniqueValues(features, key) {
-  return [...new Set(features.map((feature) => createPopupValue(feature.properties?.[key])).filter((value) => value !== "-"))]
-    .sort((a, b) => a.localeCompare(b, "es"));
-}
-
-function populateSelect(selectElement, values) {
-  const selectedValue = selectElement.value || "ALL";
-  selectElement.innerHTML = '<option value="ALL">Todos</option>';
-
-  values.forEach((value) => {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value;
-    selectElement.appendChild(option);
+function disableUnusedFilters() {
+  [statusFilter, sectionFilter, mastFilter, searchInput, resetFiltersBtn].forEach((el) => {
+    el.disabled = true;
   });
-
-  if ([...selectElement.options].some((option) => option.value === selectedValue)) {
-    selectElement.value = selectedValue;
-  }
 }
 
-function populateFilters(features) {
-  populateSelect(statusFilter, VALID_STATUSES);
-  populateSelect(sectionFilter, extractUniqueValues(features, "section"));
-  populateSelect(mastFilter, extractUniqueValues(features, "mast"));
-}
-
-function featureMatchesFilters(feature) {
-  const properties = feature.properties || {};
-  const status = normalizeStatus(properties.status);
-  const section = createPopupValue(properties.section);
-  const mast = createPopupValue(properties.mast);
-  const searchTerm = searchInput.value.trim().toLowerCase();
-
-  const matchesStatus = statusFilter.value === "ALL" || status === statusFilter.value;
-  const matchesSection = sectionFilter.value === "ALL" || section === sectionFilter.value;
-  const matchesMast = mastFilter.value === "ALL" || mast === mastFilter.value;
-
-  const searchableFields = [
-    createPopupValue(properties.uid),
-    createPopupValue(properties.parcel_id),
-    createPopupValue(properties.comment)
-  ].join(" ").toLowerCase();
-
-  const matchesSearch = !searchTerm || searchableFields.includes(searchTerm);
-
-  return matchesStatus && matchesSection && matchesMast && matchesSearch;
-}
-
-function updateCounters(features) {
-  const counts = {
-    total: features.length,
-    APPROVED: 0,
-    PENDING: 0,
-    REJECTED: 0,
-    CONDITIONAL: 0,
-    UNKNOWN: 0
-  };
-
-  features.forEach((feature) => {
-    counts[normalizeStatus(feature.properties?.status)] += 1;
-  });
-
-  counters.total.textContent = counts.total;
-  VALID_STATUSES.forEach((status) => {
-    counters[status].textContent = counts[status];
-  });
+function resetCounters() {
+  counters.total.textContent = "0";
+  counters.OBTAINED.textContent = "0";
+  counters.CONTACTED.textContent = "0";
+  counters.NOT_STARTED.textContent = "0";
+  counters.csv.textContent = "0";
+  counters.NO_DATA.textContent = "0";
 }
 
 function fitToLayerBounds(layer) {
@@ -253,11 +181,7 @@ function fitToLayerBounds(layer) {
 }
 
 function axisStyle() {
-  return {
-    color: "#1f4e79",
-    weight: 3.4,
-    opacity: 1
-  };
+  return { color: "#1f4e79", weight: 3.4, opacity: 1 };
 }
 
 function bufferStyle() {
@@ -271,11 +195,7 @@ function bufferStyle() {
 }
 
 function projectLineStyle() {
-  return {
-    color: "#154360",
-    weight: 1.7,
-    opacity: 0.9
-  };
+  return { color: "#154360", weight: 1.7, opacity: 0.9 };
 }
 
 function projectPolygonStyle() {
@@ -283,17 +203,83 @@ function projectPolygonStyle() {
     color: "#d35400",
     weight: 1.1,
     fillColor: "#f39c12",
-    fillOpacity: 0.18
+    fillOpacity: 0.12
   };
+}
+
+function parseCsv(text) {
+  const lines = text.trim().split(/\r?\n/);
+  const headers = lines[0].split(",").map((item) => item.trim());
+  return lines.slice(1).filter(Boolean).map((line) => {
+    const values = line.split(",");
+    const row = {};
+    headers.forEach((header, index) => {
+      row[header] = (values[index] || "").trim();
+    });
+    return row;
+  });
+}
+
+function getParcelStatus(parcelId) {
+  return permitStatusByParcel[parcelId]?.permit_status || "NO_DATA";
+}
+
+function getParcelStyle(feature) {
+  const parcelId = feature.properties?.parcel_id;
+  const status = getParcelStatus(parcelId);
+  return {
+    color: "#1f2933",
+    weight: 2.2,
+    fillColor: PERMIT_STATUS_COLORS[status] || PERMIT_STATUS_COLORS.NO_DATA,
+    fillOpacity: 0.42
+  };
+}
+
+function createParcelPopup(feature) {
+  const properties = feature.properties || {};
+  const parcelId = properties.parcel_id || "-";
+  const csv = permitStatusByParcel[parcelId] || {};
+  return `
+    <div class="popup-grid">
+      <div><strong>parcel_id</strong><span>${parcelId}</span></div>
+      <div><strong>gemarkung</strong><span>${properties.gemarkung || "-"}</span></div>
+      <div><strong>flur</strong><span>${properties.flur || "-"}</span></div>
+      <div><strong>status</strong><span>${csv.permit_status || "NO_DATA"}</span></div>
+      <div><strong>fase</strong><span>${csv.permit_phase || "-"}</span></div>
+      <div><strong>owner_ref</strong><span>${csv.owner_ref || "-"}</span></div>
+      <div><strong>contact_date</strong><span>${csv.contact_date || "-"}</span></div>
+      <div><strong>permit_date</strong><span>${csv.permit_date || "-"}</span></div>
+      <div><strong>comment</strong><span>${csv.comment || properties.note || "-"}</span></div>
+    </div>
+  `;
+}
+
+function updatePermitCounters(features) {
+  const counts = {
+    total: features.length,
+    OBTAINED: 0,
+    CONTACTED: 0,
+    NOT_STARTED: 0,
+    NO_DATA: 0
+  };
+
+  features.forEach((feature) => {
+    counts[getParcelStatus(feature.properties?.parcel_id)] += 1;
+  });
+
+  counters.total.textContent = String(counts.total);
+  counters.OBTAINED.textContent = String(counts.OBTAINED);
+  counters.CONTACTED.textContent = String(counts.CONTACTED);
+  counters.NOT_STARTED.textContent = String(counts.NOT_STARTED);
+  counters.csv.textContent = String(features.filter((feature) => permitStatusByParcel[feature.properties?.parcel_id]).length);
+  counters.NO_DATA.textContent = String(counts.NO_DATA);
 }
 
 function bindProjectPopup(feature, layer, label) {
   const properties = feature.properties || {};
   const propertyEntries = Object.entries(properties).slice(0, 8);
   const detailHtml = propertyEntries.length
-    ? propertyEntries
-        .map(([key, value]) => `<div><strong>${key}</strong><span>${createPopupValue(value)}</span></div>`)
-        .join("")
+    ? propertyEntries.map(([key, value]) => `<div><strong>${key}</strong><span>${String(value)}</span></div>`).join("")
     : '<div><strong>detalle</strong><span>Sin atributos relevantes</span></div>';
 
   layer.bindPopup(`
@@ -305,22 +291,11 @@ function bindProjectPopup(feature, layer, label) {
 }
 
 async function loadProjectLayers() {
-  const [linesResponse, polygonsResponse, axisResponse, bufferResponse] = await Promise.all([
-    fetch(PROJECT_DXF_LINES_PATH),
-    fetch(PROJECT_DXF_POLYGONS_PATH),
-    fetch(TRASSENACHSE_PATH),
-    fetch(TRASSENACHSE_BUFFER_PATH)
-  ]);
-
-  if (!linesResponse.ok || !polygonsResponse.ok || !axisResponse.ok || !bufferResponse.ok) {
-    throw new Error("No se pudieron cargar las capas exportadas del proyecto QGIS.");
-  }
-
   const [linesGeoJson, polygonsGeoJson, axisGeoJson, bufferGeoJson] = await Promise.all([
-    linesResponse.json(),
-    polygonsResponse.json(),
-    axisResponse.json(),
-    bufferResponse.json()
+    fetch(PROJECT_DXF_LINES_PATH).then((r) => r.json()),
+    fetch(PROJECT_DXF_POLYGONS_PATH).then((r) => r.json()),
+    fetch(TRASSENACHSE_PATH).then((r) => r.json()),
+    fetch(TRASSENACHSE_BUFFER_PATH).then((r) => r.json())
   ]);
 
   trassenachseBufferLayer = L.geoJSON(bufferGeoJson, {
@@ -343,12 +318,7 @@ async function loadProjectLayers() {
     onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "DXF poligonos")
   }).addTo(map);
 
-  projectGroup = L.featureGroup([
-    trassenachseBufferLayer,
-    trassenachseLayer,
-    projectLinesLayer,
-    projectPolygonsLayer
-  ]);
+  projectGroup = L.featureGroup([trassenachseBufferLayer, trassenachseLayer, projectLinesLayer, projectPolygonsLayer]);
 
   overlayControl.addOverlay(trassenachseBufferLayer, "Corredor 500m");
   overlayControl.addOverlay(trassenachseLayer, "Trassenachse Gesamt");
@@ -356,77 +326,62 @@ async function loadProjectLayers() {
   overlayControl.addOverlay(projectPolygonsLayer, "Proyecto QGIS - DXF poligonos");
 }
 
-function renderFeatures(features, shouldFitBounds = false) {
-  currentVisibleFeatures = features;
+async function loadParcelPermits() {
+  const [parcelGeoJson, csvText] = await Promise.all([
+    fetch(PARCEL_PERMITS_GEOJSON_PATH).then((r) => r.json()),
+    fetch(PARCEL_PERMITS_CSV_PATH).then((r) => r.text())
+  ]);
 
-  if (currentLayer) {
-    overlayControl.removeLayer(currentLayer);
-    map.removeLayer(currentLayer);
-  }
+  permitParcelFeatures = Array.isArray(parcelGeoJson.features) ? parcelGeoJson.features : [];
+  permitStatusByParcel = {};
 
-  currentLayer = L.geoJSON(features, {
-    style: styleFeature,
-    onEachFeature
+  parseCsv(csvText).forEach((row) => {
+    if (row.parcel_id) {
+      permitStatusByParcel[row.parcel_id] = row;
+    }
+  });
+
+  parcelPermitsLayer = L.geoJSON(permitParcelFeatures, {
+    style: getParcelStyle,
+    onEachFeature: (feature, layer) => {
+      layer.bindPopup(createParcelPopup(feature));
+    }
   }).addTo(map);
 
-  overlayControl.addOverlay(currentLayer, "Wegebau / Permisos");
-  updateCounters(features);
-
-  if (features.length > 0) {
-    showMessage(`Mostrando ${features.length} poligonos.`, true);
-    window.setTimeout(() => showMessage("", false), 1800);
-    if (shouldFitBounds) {
-      fitToLayerBounds(currentLayer);
-    }
-  } else {
-    showMessage("No hay poligonos que cumplan los filtros.", true);
-  }
+  overlayControl.addOverlay(parcelPermitsLayer, "Control permisos CSV");
+  updatePermitCounters(permitParcelFeatures);
 }
 
-function applyFilters(shouldFitBounds = false) {
-  const filteredFeatures = sourceFeatures.filter(featureMatchesFilters);
-  renderFeatures(filteredFeatures, shouldFitBounds);
-}
-
-function resetFilters() {
-  statusFilter.value = "ALL";
-  sectionFilter.value = "ALL";
-  mastFilter.value = "ALL";
-  searchInput.value = "";
-  applyFilters(true);
-}
-
-async function loadGeoJson() {
-  showMessage("Cargando datos GIS...", true);
+async function initializeMap() {
+  showMessage("Cargando capas del proyecto y control de permisos CSV...", true);
+  disableUnusedFilters();
+  resetCounters();
 
   try {
-    const response = await fetch(GEOJSON_PATH);
-    if (!response.ok) {
-      throw new Error(`No se pudo cargar ${GEOJSON_PATH}: ${response.status}`);
+    await loadProjectLayers();
+    await loadParcelPermits();
+
+    const zoomLayer = parcelPermitsLayer || trassenachseBufferLayer || projectGroup;
+    if (zoomLayer) {
+      fitToLayerBounds(zoomLayer);
     }
 
-    const geojson = await response.json();
-    sourceFeatures = Array.isArray(geojson.features) ? geojson.features : [];
-
-    await loadProjectLayers();
-    populateFilters(sourceFeatures);
-    applyFilters(true);
+    showMessage("Control de permisos cargado desde CSV.", true);
+    window.setTimeout(() => showMessage("", false), 2200);
   } catch (error) {
     console.error(error);
-    showMessage("Error al cargar el GeoJSON. Revisa Live Server y la ruta de datos.", true);
+    showMessage("Error al cargar el control de permisos CSV o las capas del proyecto.", true);
   }
 }
 
-statusFilter.addEventListener("change", () => applyFilters());
-sectionFilter.addEventListener("change", () => applyFilters());
-mastFilter.addEventListener("change", () => applyFilters());
-searchInput.addEventListener("input", () => applyFilters());
-resetFiltersBtn.addEventListener("click", resetFilters);
 zoomAllBtn.addEventListener("click", () => {
-  if (currentLayer && currentVisibleFeatures.length > 0) {
-    fitToLayerBounds(currentLayer);
+  if (parcelPermitsLayer) {
+    fitToLayerBounds(parcelPermitsLayer);
+  } else if (projectGroup) {
+    fitToLayerBounds(projectGroup);
   }
 });
+
 zoomProjectBtn.addEventListener("click", () => {
   if (trassenachseBufferLayer) {
     fitToLayerBounds(trassenachseBufferLayer);
@@ -435,4 +390,4 @@ zoomProjectBtn.addEventListener("click", () => {
   }
 });
 
-loadGeoJson();
+initializeMap();

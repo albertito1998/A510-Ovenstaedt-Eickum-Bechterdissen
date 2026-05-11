@@ -1,0 +1,69 @@
+{
+  "type": "FeatureCollection",
+  "name": "parcel_permits_example",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "parcel_id": "052580-001-00012",
+        "gemarkung": "Ovenstaedt",
+        "flur": "001",
+        "note": "Parcela ejemplo dentro del buffer"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.6668, 52.0644],
+            [8.6713, 52.0644],
+            [8.6713, 52.0673],
+            [8.6668, 52.0673],
+            [8.6668, 52.0644]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcel_id": "052580-001-00027",
+        "gemarkung": "Eickum",
+        "flur": "001",
+        "note": "Parcela ejemplo dentro del buffer"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.6875, 52.1266],
+            [8.6922, 52.1266],
+            [8.6922, 52.1292],
+            [8.6875, 52.1292],
+            [8.6875, 52.1266]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "parcel_id": "052580-002-00005",
+        "gemarkung": "Bechterdissen",
+        "flur": "002",
+        "note": "Parcela ejemplo dentro del buffer"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [8.7251, 52.0455],
+            [8.7297, 52.0455],
+            [8.7297, 52.0482],
+            [8.7251, 52.0482],
+            [8.7251, 52.0455]
+          ]
+        ]
+      }
+    }
+  ]
+}

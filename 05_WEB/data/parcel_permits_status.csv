@@ -1,0 +1,4 @@
+parcel_id,permit_status,permit_phase,owner_ref,contact_date,permit_date,comment
+052580-001-00012,OBTAINED,Permiso conseguido,OWNER-REF-001,2026-05-02,2026-05-08,Permiso firmado y archivado.
+052580-001-00027,CONTACTED,Comunicado pero pendiente,OWNER-REF-002,2026-05-06,,Propiedad informada; pendiente confirmacion formal.
+052580-002-00005,NOT_STARTED,Sin iniciar,OWNER-REF-003,,,Sin gestion iniciada todavia.

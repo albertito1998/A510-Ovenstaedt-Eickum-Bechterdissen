@@ -27,11 +27,13 @@ A510_OVENSTAEDT_EICKUM_BECHTERDISSEN_WEBGIS/
     |-- style.css
     |-- README.md
     `-- data/
+        |-- parcel_permits_example.geojson
+        |-- parcel_permits_status.csv
         |-- project_dxf_lineas.geojson
         |-- project_dxf_poligonos.geojson
         |-- trassenachse_gesamt.geojson
         |-- trassenachse_gesamt_buffer_500m.geojson
-        `-- wegebau_status.geojson
+        `-- (reservado para permisos reales)
 ```
 
 ## 3. Flujo AutoCAD -> QGIS -> GeoJSON -> Web
@@ -41,7 +43,7 @@ A510_OVENSTAEDT_EICKUM_BECHTERDISSEN_WEBGIS/
 4. Exportar la capa final a GeoJSON web.
 5. Exportar tambien las capas del DXF del proyecto QGIS a GeoJSON web si deben visualizarse en el visor.
 6. Para el eje `Trassenachse Gesamt`, generar un buffer de `500 m` a cada lado en `EPSG:25832`.
-7. Guardar los archivos finales en `05_WEB/data/wegebau_status.geojson`, `05_WEB/data/project_dxf_lineas.geojson`, `05_WEB/data/project_dxf_poligonos.geojson`, `05_WEB/data/trassenachse_gesamt.geojson` y `05_WEB/data/trassenachse_gesamt_buffer_500m.geojson`.
+7. Guardar los archivos finales en `05_WEB/data/` y usar `wegebau_status.geojson` solo cuando existan datos reales de permisos.
 8. Publicar la carpeta `05_WEB` como visor estatico.
 
 ## 4. Explicacion CRS
@@ -68,14 +70,14 @@ Cada feature debe incluir:
   "project": "A510 Ovenstaedt-Eickum-Bechterdissen",
   "section": "Ovenstaedt-Eickum",
   "mast": "M001",
-  "parcel_id": "TEST-001",
+  "parcel_id": "PARCEL-001",
   "type": "WEG",
   "status": "PENDING",
-  "owner_ref": "OWNER-001",
+  "owner_ref": "OWNER-REF",
   "permit_ref": "",
   "date_req": "2026-05-11",
   "date_ok": "",
-  "comment": "Test polygon only"
+  "comment": "Permiso pendiente"
 }
 ```
 
@@ -122,10 +124,12 @@ Cada feature debe incluir:
 - Backup de `01_QGIS` y `03_DATA` en Google Drive.
 
 ## Notas operativas
-- La capa WMS de catastro se configura en `app.js` mediante `CATASTRO_WMS_URL` y `CATASTRO_WMS_LAYER_NAME`.
-- Las capas WMS de Naturschutz se configuran en `app.js` mediante `NATURSCHUTZ_WMS_URL` y `NATURSCHUTZ_WMS_LAYER_NAMES`.
 - El visor web incluye dos mapas base conmutables: `OpenStreetMap` y `Esri Satélite`.
+- El visor `ELECNORGIS` carga por defecto varios WMS oficiales de NRW visibles desde el arranque: ALKIS catastro, red hidrográfica, zonas inundables, HQ100, Naturschutz, FFH, Vogelschutz, Landschaftsschutz y Biotopkataster.
 - El visor `ELECNORGIS` carga tambien las capas del proyecto QGIS exportadas desde el DXF en formato GeoJSON web (`EPSG:4326`).
+- El control de permisos sobre parcelas se vincula desde `05_WEB/data/parcel_permits_status.csv`.
+- La geometria de ejemplo para las fincas de control se carga desde `05_WEB/data/parcel_permits_example.geojson`.
+- Estados CSV usados en la web: `OBTAINED`, `CONTACTED`, `NOT_STARTED`.
 - El boton `Zoom corredor 500 m` centra el mapa sobre el buffer generado para `Trassenachse Gesamt`.
-- El GeoJSON incluido es un ejemplo ficticio en `EPSG:4326`, sin datos reales de propietarios ni parcelas.
+- El fichero `wegebau_status.geojson` no se incluye de momento; el visor queda preparado para incorporarlo cuando existan datos reales de permisos.
 - La carpeta documental oficial puede mantenerse en Google Drive y referenciarse desde `permit_ref` mediante URL.
