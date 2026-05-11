@@ -106,6 +106,9 @@ const counters = {
   NO_DATA: document.getElementById("countUnknown")
 };
 
+const IS_MOBILE = window.matchMedia("(max-width: 768px)").matches;
+const DEFAULT_WMS_KEYS = IS_MOBILE ? ["catastro"] : ["catastro", "rios"];
+
 const map = L.map("map", { zoomControl: true }).setView([52.05, 8.65], 11);
 
 const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -129,7 +132,6 @@ WMS_CATALOG.forEach((entry) => {
     attribution: entry.attribution
   });
   entry.layer = layer;
-  layer.addTo(map);
   overlayLayers[entry.label] = layer;
 });
 
@@ -143,12 +145,17 @@ const overlayControl = L.control.layers(
 ).addTo(map);
 
 satelliteLayer.addTo(map);
+WMS_CATALOG.filter((entry) => DEFAULT_WMS_KEYS.includes(entry.key)).forEach((entry) => {
+  entry.layer.addTo(map);
+});
 
 let trassenachseLayer = null;
 let trassenachseBufferLayer = null;
 let projectLinesLayer = null;
 let projectPolygonsLayer = null;
 let parcelPermitsLayer = null;
+let dxfLinesLoaded = false;
+let dxfPolygonsLoaded = false;
 let projectGroup = null;
 let permitParcelFeatures = [];
 let permitStatusByParcel = {};
@@ -291,9 +298,7 @@ function bindProjectPopup(feature, layer, label) {
 }
 
 async function loadProjectLayers() {
-  const [linesGeoJson, polygonsGeoJson, axisGeoJson, bufferGeoJson] = await Promise.all([
-    fetch(PROJECT_DXF_LINES_PATH).then((r) => r.json()),
-    fetch(PROJECT_DXF_POLYGONS_PATH).then((r) => r.json()),
+  const [axisGeoJson, bufferGeoJson] = await Promise.all([
     fetch(TRASSENACHSE_PATH).then((r) => r.json()),
     fetch(TRASSENACHSE_BUFFER_PATH).then((r) => r.json())
   ]);
@@ -307,23 +312,42 @@ async function loadProjectLayers() {
     style: axisStyle,
     onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "Trassenachse Gesamt")
   }).addTo(map);
-
-  projectLinesLayer = L.geoJSON(linesGeoJson, {
-    style: projectLineStyle,
-    onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "DXF lineas")
-  }).addTo(map);
-
-  projectPolygonsLayer = L.geoJSON(polygonsGeoJson, {
-    style: projectPolygonStyle,
-    onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "DXF poligonos")
-  }).addTo(map);
-
-  projectGroup = L.featureGroup([trassenachseBufferLayer, trassenachseLayer, projectLinesLayer, projectPolygonsLayer]);
+  projectLinesLayer = L.layerGroup();
+  projectPolygonsLayer = L.layerGroup();
+  projectGroup = L.featureGroup([trassenachseBufferLayer, trassenachseLayer]);
 
   overlayControl.addOverlay(trassenachseBufferLayer, "Corredor 500m");
   overlayControl.addOverlay(trassenachseLayer, "Trassenachse Gesamt");
   overlayControl.addOverlay(projectLinesLayer, "Proyecto QGIS - DXF lineas");
   overlayControl.addOverlay(projectPolygonsLayer, "Proyecto QGIS - DXF poligonos");
+}
+
+async function ensureDxfLinesLoaded() {
+  if (dxfLinesLoaded) {
+    return;
+  }
+
+  const geojson = await fetch(PROJECT_DXF_LINES_PATH).then((r) => r.json());
+  const loadedLayer = L.geoJSON(geojson, {
+    style: projectLineStyle,
+    onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "DXF lineas")
+  });
+  projectLinesLayer.addLayer(loadedLayer);
+  dxfLinesLoaded = true;
+}
+
+async function ensureDxfPolygonsLoaded() {
+  if (dxfPolygonsLoaded) {
+    return;
+  }
+
+  const geojson = await fetch(PROJECT_DXF_POLYGONS_PATH).then((r) => r.json());
+  const loadedLayer = L.geoJSON(geojson, {
+    style: projectPolygonStyle,
+    onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "DXF poligonos")
+  });
+  projectPolygonsLayer.addLayer(loadedLayer);
+  dxfPolygonsLoaded = true;
 }
 
 async function loadParcelPermits() {
@@ -387,6 +411,24 @@ zoomProjectBtn.addEventListener("click", () => {
     fitToLayerBounds(trassenachseBufferLayer);
   } else if (projectGroup) {
     fitToLayerBounds(projectGroup);
+  }
+});
+
+map.on("overlayadd", async (event) => {
+  try {
+    if (event.layer === projectLinesLayer) {
+      showMessage("Cargando DXF lineas...", true);
+      await ensureDxfLinesLoaded();
+      showMessage("", false);
+    }
+    if (event.layer === projectPolygonsLayer) {
+      showMessage("Cargando DXF poligonos...", true);
+      await ensureDxfPolygonsLoaded();
+      showMessage("", false);
+    }
+  } catch (error) {
+    console.error(error);
+    showMessage("Error al cargar capas DXF pesadas.", true);
   }
 });
 
