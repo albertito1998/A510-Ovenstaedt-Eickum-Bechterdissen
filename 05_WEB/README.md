@@ -29,6 +29,8 @@ A510_OVENSTAEDT_EICKUM_BECHTERDISSEN_WEBGIS/
     `-- data/
         |-- project_dxf_lineas.geojson
         |-- project_dxf_poligonos.geojson
+        |-- trassenachse_gesamt.geojson
+        |-- trassenachse_gesamt_buffer_500m.geojson
         `-- wegebau_status.geojson
 ```
 
@@ -38,8 +40,9 @@ A510_OVENSTAEDT_EICKUM_BECHTERDISSEN_WEBGIS/
 3. Validar atributos, geometria y estados de permiso en QGIS.
 4. Exportar la capa final a GeoJSON web.
 5. Exportar tambien las capas del DXF del proyecto QGIS a GeoJSON web si deben visualizarse en el visor.
-6. Guardar los archivos finales en `05_WEB/data/wegebau_status.geojson`, `05_WEB/data/project_dxf_lineas.geojson` y `05_WEB/data/project_dxf_poligonos.geojson`.
-7. Publicar la carpeta `05_WEB` como visor estatico.
+6. Para el eje `Trassenachse Gesamt`, generar un buffer de `500 m` a cada lado en `EPSG:25832`.
+7. Guardar los archivos finales en `05_WEB/data/wegebau_status.geojson`, `05_WEB/data/project_dxf_lineas.geojson`, `05_WEB/data/project_dxf_poligonos.geojson`, `05_WEB/data/trassenachse_gesamt.geojson` y `05_WEB/data/trassenachse_gesamt_buffer_500m.geojson`.
+8. Publicar la carpeta `05_WEB` como visor estatico.
 
 ## 4. Explicacion CRS
 - CAD/QGIS: `EPSG:25832` (`ETRS89 / UTM Zone 32N`).
@@ -119,8 +122,10 @@ Cada feature debe incluir:
 - Backup de `01_QGIS` y `03_DATA` en Google Drive.
 
 ## Notas operativas
-- La capa WMS de catastro se configura en `app.js` mediante `WMS_URL` y `WMS_LAYER_NAME`.
+- La capa WMS de catastro se configura en `app.js` mediante `CATASTRO_WMS_URL` y `CATASTRO_WMS_LAYER_NAME`.
+- Las capas WMS de Naturschutz se configuran en `app.js` mediante `NATURSCHUTZ_WMS_URL` y `NATURSCHUTZ_WMS_LAYER_NAMES`.
 - El visor web incluye dos mapas base conmutables: `OpenStreetMap` y `Esri Satélite`.
 - El visor `ELECNORGIS` carga tambien las capas del proyecto QGIS exportadas desde el DXF en formato GeoJSON web (`EPSG:4326`).
+- El boton `Zoom corredor 500 m` centra el mapa sobre el buffer generado para `Trassenachse Gesamt`.
 - El GeoJSON incluido es un ejemplo ficticio en `EPSG:4326`, sin datos reales de propietarios ni parcelas.
 - La carpeta documental oficial puede mantenerse en Google Drive y referenciarse desde `permit_ref` mediante URL.

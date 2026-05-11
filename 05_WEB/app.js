@@ -1,5 +1,7 @@
-const WMS_URL = "";
-const WMS_LAYER_NAME = "";
+const CATASTRO_WMS_URL = "";
+const CATASTRO_WMS_LAYER_NAME = "";
+const NATURSCHUTZ_WMS_URL = "";
+const NATURSCHUTZ_WMS_LAYER_NAMES = "";
 
 const STATUS_COLORS = {
   APPROVED: "#2ecc71",
@@ -13,6 +15,8 @@ const VALID_STATUSES = ["APPROVED", "PENDING", "REJECTED", "CONDITIONAL", "UNKNO
 const GEOJSON_PATH = "./data/wegebau_status.geojson";
 const PROJECT_DXF_LINES_PATH = "./data/project_dxf_lineas.geojson";
 const PROJECT_DXF_POLYGONS_PATH = "./data/project_dxf_poligonos.geojson";
+const TRASSENACHSE_PATH = "./data/trassenachse_gesamt.geojson";
+const TRASSENACHSE_BUFFER_PATH = "./data/trassenachse_gesamt_buffer_500m.geojson";
 
 const mapMessage = document.getElementById("mapMessage");
 const statusFilter = document.getElementById("statusFilter");
@@ -49,29 +53,57 @@ const satelliteLayer = L.tileLayer(
   }
 );
 
-let cadastralWmsLayer = null;
-if (WMS_URL && WMS_LAYER_NAME) {
-  cadastralWmsLayer = L.tileLayer.wms(WMS_URL, {
-    layers: WMS_LAYER_NAME,
+function createWmsLayer(url, layerNames, attribution, opacity = 0.55) {
+  if (!url || !layerNames) {
+    return null;
+  }
+
+  return L.tileLayer.wms(url, {
+    layers: layerNames,
     format: "image/png",
     transparent: true,
-    opacity: 0.55,
-    attribution: "WMS Catastro"
-  }).addTo(map);
+    opacity,
+    attribution
+  });
+}
+
+const cadastralWmsLayer = createWmsLayer(
+  CATASTRO_WMS_URL,
+  CATASTRO_WMS_LAYER_NAME,
+  "WMS Catastro",
+  0.58
+);
+const naturschutzWmsLayer = createWmsLayer(
+  NATURSCHUTZ_WMS_URL,
+  NATURSCHUTZ_WMS_LAYER_NAMES,
+  "WMS Naturschutz",
+  0.62
+);
+
+const overlayLayers = {};
+if (cadastralWmsLayer) {
+  cadastralWmsLayer.addTo(map);
+  overlayLayers["Catastro corredor 500m"] = cadastralWmsLayer;
+}
+if (naturschutzWmsLayer) {
+  naturschutzWmsLayer.addTo(map);
+  overlayLayers["Naturschutz corredor 500m"] = naturschutzWmsLayer;
 }
 
 const overlayControl = L.control.layers(
   {
     OpenStreetMap: osmLayer,
-    "Esri Satélite": satelliteLayer
+    "Esri Satelite": satelliteLayer
   },
-  cadastralWmsLayer ? { Catastro: cadastralWmsLayer } : {},
+  overlayLayers,
   { collapsed: false }
 ).addTo(map);
 
 let sourceFeatures = [];
 let currentLayer = null;
 let currentVisibleFeatures = [];
+let trassenachseLayer = null;
+let trassenachseBufferLayer = null;
 let projectLinesLayer = null;
 let projectPolygonsLayer = null;
 let projectGroup = null;
@@ -220,6 +252,24 @@ function fitToLayerBounds(layer) {
   }
 }
 
+function axisStyle() {
+  return {
+    color: "#1f4e79",
+    weight: 3.4,
+    opacity: 1
+  };
+}
+
+function bufferStyle() {
+  return {
+    color: "#16a085",
+    weight: 2,
+    dashArray: "10 6",
+    fillColor: "#48c9b0",
+    fillOpacity: 0.09
+  };
+}
+
 function projectLineStyle() {
   return {
     color: "#154360",
@@ -255,19 +305,33 @@ function bindProjectPopup(feature, layer, label) {
 }
 
 async function loadProjectLayers() {
-  const [linesResponse, polygonsResponse] = await Promise.all([
+  const [linesResponse, polygonsResponse, axisResponse, bufferResponse] = await Promise.all([
     fetch(PROJECT_DXF_LINES_PATH),
-    fetch(PROJECT_DXF_POLYGONS_PATH)
+    fetch(PROJECT_DXF_POLYGONS_PATH),
+    fetch(TRASSENACHSE_PATH),
+    fetch(TRASSENACHSE_BUFFER_PATH)
   ]);
 
-  if (!linesResponse.ok || !polygonsResponse.ok) {
+  if (!linesResponse.ok || !polygonsResponse.ok || !axisResponse.ok || !bufferResponse.ok) {
     throw new Error("No se pudieron cargar las capas exportadas del proyecto QGIS.");
   }
 
-  const [linesGeoJson, polygonsGeoJson] = await Promise.all([
+  const [linesGeoJson, polygonsGeoJson, axisGeoJson, bufferGeoJson] = await Promise.all([
     linesResponse.json(),
-    polygonsResponse.json()
+    polygonsResponse.json(),
+    axisResponse.json(),
+    bufferResponse.json()
   ]);
+
+  trassenachseBufferLayer = L.geoJSON(bufferGeoJson, {
+    style: bufferStyle,
+    onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "Trassenachse Buffer 500m")
+  }).addTo(map);
+
+  trassenachseLayer = L.geoJSON(axisGeoJson, {
+    style: axisStyle,
+    onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "Trassenachse Gesamt")
+  }).addTo(map);
 
   projectLinesLayer = L.geoJSON(linesGeoJson, {
     style: projectLineStyle,
@@ -279,8 +343,15 @@ async function loadProjectLayers() {
     onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "DXF poligonos")
   }).addTo(map);
 
-  projectGroup = L.featureGroup([projectLinesLayer, projectPolygonsLayer]);
+  projectGroup = L.featureGroup([
+    trassenachseBufferLayer,
+    trassenachseLayer,
+    projectLinesLayer,
+    projectPolygonsLayer
+  ]);
 
+  overlayControl.addOverlay(trassenachseBufferLayer, "Corredor 500m");
+  overlayControl.addOverlay(trassenachseLayer, "Trassenachse Gesamt");
   overlayControl.addOverlay(projectLinesLayer, "Proyecto QGIS - DXF lineas");
   overlayControl.addOverlay(projectPolygonsLayer, "Proyecto QGIS - DXF poligonos");
 }
@@ -302,13 +373,13 @@ function renderFeatures(features, shouldFitBounds = false) {
   updateCounters(features);
 
   if (features.length > 0) {
-    showMessage(`Mostrando ${features.length} polígonos.`, true);
+    showMessage(`Mostrando ${features.length} poligonos.`, true);
     window.setTimeout(() => showMessage("", false), 1800);
     if (shouldFitBounds) {
       fitToLayerBounds(currentLayer);
     }
   } else {
-    showMessage("No hay polígonos que cumplan los filtros.", true);
+    showMessage("No hay poligonos que cumplan los filtros.", true);
   }
 }
 
@@ -357,7 +428,9 @@ zoomAllBtn.addEventListener("click", () => {
   }
 });
 zoomProjectBtn.addEventListener("click", () => {
-  if (projectGroup) {
+  if (trassenachseBufferLayer) {
+    fitToLayerBounds(trassenachseBufferLayer);
+  } else if (projectGroup) {
     fitToLayerBounds(projectGroup);
   }
 });
