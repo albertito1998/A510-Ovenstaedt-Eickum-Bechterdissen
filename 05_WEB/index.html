@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A510 WebGIS | Wegebau y Permisos</title>
+  <title>ELECNORGIS | A510 Wegebau y Permisos</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link
     rel="stylesheet"
@@ -17,7 +17,7 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="sidebar__header">
-        <p class="eyebrow">Proyecto WebGIS</p>
+        <p class="eyebrow">ELECNORGIS</p>
         <h1>A510 Ovenstaedt-Eickum-Bechterdissen</h1>
         <p class="subtitle">Wegebau, permisos de parcelas y accesos temporales</p>
       </div>
@@ -58,6 +58,9 @@
         <div class="button-row">
           <button id="resetFiltersBtn" type="button">Reset filtros</button>
           <button id="zoomAllBtn" type="button">Zoom a todos</button>
+        </div>
+        <div class="button-row button-row--single">
+          <button id="zoomProjectBtn" type="button">Zoom proyecto QGIS</button>
         </div>
       </section>
 
@@ -105,6 +108,7 @@
       <section class="panel-block panel-block--small">
         <h2>Capas</h2>
         <p>Bases disponibles: OpenStreetMap y Esri Satélite. WMS catastral preparado por variables en <code>app.js</code>.</p>
+        <p>Capas proyecto: DXF líneas y DXF polígonos exportados desde el proyecto QGIS a GeoJSON web.</p>
         <p class="crs-note">CAD/QGIS: EPSG:25832. Web GeoJSON: EPSG:4326.</p>
       </section>
     </aside>

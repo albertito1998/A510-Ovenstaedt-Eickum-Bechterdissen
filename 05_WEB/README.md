@@ -27,6 +27,8 @@ A510_OVENSTAEDT_EICKUM_BECHTERDISSEN_WEBGIS/
     |-- style.css
     |-- README.md
     `-- data/
+        |-- project_dxf_lineas.geojson
+        |-- project_dxf_poligonos.geojson
         `-- wegebau_status.geojson
 ```
 
@@ -35,8 +37,9 @@ A510_OVENSTAEDT_EICKUM_BECHTERDISSEN_WEBGIS/
 2. Abrir en QGIS el proyecto `01_QGIS/a510_ovenstaedt_eickum_bechterdissen_wegebau.qgz`, que referencia el DXF georreferenciado de `02_CAD/export_autocad.dxf` en `EPSG:25832`.
 3. Validar atributos, geometria y estados de permiso en QGIS.
 4. Exportar la capa final a GeoJSON web.
-5. Guardar el archivo final en `05_WEB/data/wegebau_status.geojson`.
-6. Publicar la carpeta `05_WEB` como visor estatico.
+5. Exportar tambien las capas del DXF del proyecto QGIS a GeoJSON web si deben visualizarse en el visor.
+6. Guardar los archivos finales en `05_WEB/data/wegebau_status.geojson`, `05_WEB/data/project_dxf_lineas.geojson` y `05_WEB/data/project_dxf_poligonos.geojson`.
+7. Publicar la carpeta `05_WEB` como visor estatico.
 
 ## 4. Explicacion CRS
 - CAD/QGIS: `EPSG:25832` (`ETRS89 / UTM Zone 32N`).
@@ -118,5 +121,6 @@ Cada feature debe incluir:
 ## Notas operativas
 - La capa WMS de catastro se configura en `app.js` mediante `WMS_URL` y `WMS_LAYER_NAME`.
 - El visor web incluye dos mapas base conmutables: `OpenStreetMap` y `Esri Satélite`.
+- El visor `ELECNORGIS` carga tambien las capas del proyecto QGIS exportadas desde el DXF en formato GeoJSON web (`EPSG:4326`).
 - El GeoJSON incluido es un ejemplo ficticio en `EPSG:4326`, sin datos reales de propietarios ni parcelas.
 - La carpeta documental oficial puede mantenerse en Google Drive y referenciarse desde `permit_ref` mediante URL.

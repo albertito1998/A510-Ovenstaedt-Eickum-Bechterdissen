@@ -127,6 +127,11 @@ button:focus {
   gap: 10px;
 }
 
+.button-row--single {
+  grid-template-columns: 1fr;
+  margin-top: 10px;
+}
+
 button {
   cursor: pointer;
   font-weight: 700;

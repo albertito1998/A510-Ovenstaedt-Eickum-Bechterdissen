@@ -11,6 +11,8 @@ const STATUS_COLORS = {
 
 const VALID_STATUSES = ["APPROVED", "PENDING", "REJECTED", "CONDITIONAL", "UNKNOWN"];
 const GEOJSON_PATH = "./data/wegebau_status.geojson";
+const PROJECT_DXF_LINES_PATH = "./data/project_dxf_lineas.geojson";
+const PROJECT_DXF_POLYGONS_PATH = "./data/project_dxf_poligonos.geojson";
 
 const mapMessage = document.getElementById("mapMessage");
 const statusFilter = document.getElementById("statusFilter");
@@ -19,6 +21,7 @@ const mastFilter = document.getElementById("mastFilter");
 const searchInput = document.getElementById("searchInput");
 const resetFiltersBtn = document.getElementById("resetFiltersBtn");
 const zoomAllBtn = document.getElementById("zoomAllBtn");
+const zoomProjectBtn = document.getElementById("zoomProjectBtn");
 
 const counters = {
   total: document.getElementById("countTotal"),
@@ -69,6 +72,9 @@ const overlayControl = L.control.layers(
 let sourceFeatures = [];
 let currentLayer = null;
 let currentVisibleFeatures = [];
+let projectLinesLayer = null;
+let projectPolygonsLayer = null;
+let projectGroup = null;
 
 function showMessage(message, isVisible = true) {
   mapMessage.textContent = message;
@@ -214,6 +220,71 @@ function fitToLayerBounds(layer) {
   }
 }
 
+function projectLineStyle() {
+  return {
+    color: "#154360",
+    weight: 1.7,
+    opacity: 0.9
+  };
+}
+
+function projectPolygonStyle() {
+  return {
+    color: "#d35400",
+    weight: 1.1,
+    fillColor: "#f39c12",
+    fillOpacity: 0.18
+  };
+}
+
+function bindProjectPopup(feature, layer, label) {
+  const properties = feature.properties || {};
+  const propertyEntries = Object.entries(properties).slice(0, 8);
+  const detailHtml = propertyEntries.length
+    ? propertyEntries
+        .map(([key, value]) => `<div><strong>${key}</strong><span>${createPopupValue(value)}</span></div>`)
+        .join("")
+    : '<div><strong>detalle</strong><span>Sin atributos relevantes</span></div>';
+
+  layer.bindPopup(`
+    <div class="popup-grid">
+      <div><strong>capa</strong><span>${label}</span></div>
+      ${detailHtml}
+    </div>
+  `);
+}
+
+async function loadProjectLayers() {
+  const [linesResponse, polygonsResponse] = await Promise.all([
+    fetch(PROJECT_DXF_LINES_PATH),
+    fetch(PROJECT_DXF_POLYGONS_PATH)
+  ]);
+
+  if (!linesResponse.ok || !polygonsResponse.ok) {
+    throw new Error("No se pudieron cargar las capas exportadas del proyecto QGIS.");
+  }
+
+  const [linesGeoJson, polygonsGeoJson] = await Promise.all([
+    linesResponse.json(),
+    polygonsResponse.json()
+  ]);
+
+  projectLinesLayer = L.geoJSON(linesGeoJson, {
+    style: projectLineStyle,
+    onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "DXF lineas")
+  }).addTo(map);
+
+  projectPolygonsLayer = L.geoJSON(polygonsGeoJson, {
+    style: projectPolygonStyle,
+    onEachFeature: (feature, layer) => bindProjectPopup(feature, layer, "DXF poligonos")
+  }).addTo(map);
+
+  projectGroup = L.featureGroup([projectLinesLayer, projectPolygonsLayer]);
+
+  overlayControl.addOverlay(projectLinesLayer, "Proyecto QGIS - DXF lineas");
+  overlayControl.addOverlay(projectPolygonsLayer, "Proyecto QGIS - DXF poligonos");
+}
+
 function renderFeatures(features, shouldFitBounds = false) {
   currentVisibleFeatures = features;
 
@@ -266,6 +337,7 @@ async function loadGeoJson() {
     const geojson = await response.json();
     sourceFeatures = Array.isArray(geojson.features) ? geojson.features : [];
 
+    await loadProjectLayers();
     populateFilters(sourceFeatures);
     applyFilters(true);
   } catch (error) {
@@ -282,6 +354,11 @@ resetFiltersBtn.addEventListener("click", resetFilters);
 zoomAllBtn.addEventListener("click", () => {
   if (currentLayer && currentVisibleFeatures.length > 0) {
     fitToLayerBounds(currentLayer);
+  }
+});
+zoomProjectBtn.addEventListener("click", () => {
+  if (projectGroup) {
+    fitToLayerBounds(projectGroup);
   }
 });
 
